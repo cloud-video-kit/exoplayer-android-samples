@@ -9,6 +9,10 @@ import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource
 import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.MimeTypes
+import com.google.android.exoplayer2.drm.DefaultDrmSessionManager
+import com.google.android.exoplayer2.drm.ExoMediaDrm
+import com.google.android.exoplayer2.drm.FrameworkMediaDrm
+import com.google.android.exoplayer2.drm.HttpMediaDrmCallback
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -56,9 +60,21 @@ class MainActivity : AppCompatActivity() {
                 .setResetOnNetworkTypeChange(false)
                 .build())
 
+        // Create a DRM session manager
+        val mediaDrm = FrameworkMediaDrm.newInstance(drmSchemeUuid)
+        val drmCallback = HttpMediaDrmCallback(DRM_LICENSE_URL, dataSourceFactory)
+        httpHeaders.forEach { (key, value) ->
+            drmCallback.setKeyRequestProperty(key, value)
+        }
+        val drmSessionManager = DefaultDrmSessionManager.Builder()
+            .setUuidAndExoMediaDrmProvider(drmSchemeUuid) { mediaDrm }
+            .setMultiSession(true)
+            .build(drmCallback)
+
         // Create a media source factory for DASH (Dynamic Adaptive Streaming over HTTP)
         val mediaSourceFactory = DashMediaSource.Factory(DefaultDashChunkSource.Factory(dataSourceFactory),
             DefaultHttpDataSource.Factory().setUserAgent(USER_AGENT))
+            .setDrmSessionManagerProvider { drmSessionManager }
 
         // Create a media item with the necessary details
         val mediaItem = MediaItem.Builder()
@@ -88,15 +104,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val URL =
-            "https://dtkya1w875897.cloudfront.net/da6dc30a-e52f-4af2-9751-000b89416a4e/assets/357577a1-3b61-43ae-9af5-82b9727e2f22/videokit-720p-dash-hls-drm/dash/index.mpd"
-        private const val DRM_LICENSE_URL =
-            "https://insys-marketing.la.drm.cloud/acquire-license/widevine"
-        private const val USER_AGENT = "ExoPlayer-Drm"
-        private val drmSchemeUuid = C.WIDEVINE_UUID // DRM Type
-        private val httpHeaders: Map<String, String> = mutableMapOf(
-            "x-drm-brandGuid" to "da6dc30a-e52f-4af2-9751-000b89416a4e",
-            "x-drm-userToken" to "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTM0NTYwMDAsImRybVRva2VuSW5mbyI6eyJleHAiOiIyMDMwLTAxLTAxVDAwOjAwOjAwKzAwOjAwIiwia2lkIjpbIjFmODNhZTdmLTMwYzgtNGFkMC04MTcxLTI5NjZhMDFiNjU0NyJdLCJwIjp7InBlcnMiOmZhbHNlfX19.hElVqrfK-iLeV_ZleJJO8i-Mf1D2yYVXdtgBE0ja9R4",
-        )
-    }
+         private const val URL =
+             "https://dh7xcm7fqixq8.cloudfront.net/cf06bdcb-2db5-429f-8e7e-7b3e5d2742d7/assets/a63aa0d4-9f66-44e4-8130-94f9d5175367/videokit-576p-dash-hls-drm/dash/index.mpd"
+         private const val DRM_LICENSE_URL =
+             "https://qa-lab-tenant1.la-drm.lab.cloud.insysvt.com/acquire-license/widevine"
+         private const val USER_AGENT = "ExoPlayer-Drm"
+         private val drmSchemeUuid = C.WIDEVINE_UUID // DRM Type
+         private val httpHeaders: Map<String, String> = mutableMapOf(
+             "x-drm-brandGuid" to "cf06bdcb-2db5-429f-8e7e-7b3e5d2742d7",
+             "x-drm-userToken" to "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDU2NjI5NjcsImRybVRva2VuSW5mbyI6eyJleHAiOiIyMDI2LTAxLTA4VDA5OjQ0OjUwLjAwMDI0MCIsImtpZCI6WyIqIl0sInAiOnsicGVycyI6dHJ1ZSwiZXhjIjp7IldpZGV2aW5lQ2FuUmVuZXciOnRydWUsIldpZGV2aW5lTGljZW5zZUR1cmF0aW9uU2Vjb25kcyI6NjAsIldpZGV2aW5lUmVudGFsRHVyYXRpb25TZWNvbmRzIjo2MCwiV2lkZXZpbmVQbGF5YmFja0R1cmF0aW9uU2Vjb25kcyI6NjAsIldpZGV2aW5lUmVuZXdhbERlbGF5U2Vjb25kcyI6MTB9fX19.W-Em0Xq35JO5p0yrMxrTGfceQFCAMzjIfRLarpsqFaw"
+         )
+     }
 }
