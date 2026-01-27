@@ -1,3 +1,34 @@
 <resources>
     <string name="app_name">Cloud DRM ExoPlayer Kotlin</string>
+
+    <string name="hint_url">URL</string>
+    <string name="hint_drm_license_url">DRM License URL</string>
+    <string name="hint_brand_guid">Tenant ID</string>
+    <string name="hint_user_token">User Token</string>
+
+    <string name="play">Play</string>
+    <string name="download">Download</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="delete_downloaded">Delete downloaded</string>
+    <string name="try_again">Try again</string>
+    <string name="play_offline">Play offline</string>
+
+    <string name="empty_field">This field cannot be empty.</string>
+    <string name="field_incorrect_length">Incorrect length, must be 36.</string>
+    <string name="field_incorrect_url">Incorrect URL format, must start with http:// or https://.</string>
+
+    <string name="downloading">Downloading…</string>
+    <string name="waiting">Waiting…</string>
+    <string name="removing">Removing video…</string>
+    <string name="checking_downloaded_files">Checking downloaded files…</string>
+    <string name="download_completed">Download completed. Saving…</string>
+    <string name="download_error">Download error.</string>
+    <string name="download_stop">Download stopped.</string>
+
+    <string name="download_notification_channel_name">Downloads</string>
+    <string name="download_notification_channel_description">Displays the download progress.</string>
+
+    <string name="no_downloaded_videos">No downloaded videos.</string>
+    <string name="downloaded_videos">Downloaded videos</string>
 </resources>
