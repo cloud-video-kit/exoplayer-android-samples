@@ -1,6 +1,6 @@
 # ExoPlayer with Cloud DRM in Kotlin or Java
 
-This project demonstrates how to implement DRM (Digital Rights Management) playback and offline content downloading in an Android application using ExoPlayer. It supports both Kotlin and Java.
+This project demonstrates how to implement DRM (Digital Rights Management) playback for Kotlin and Java using ExoPlayer in Android application, with additional support for offline content downloading exclusively in Kotlin.
 
 The application features a dynamic configuration form, allowing you to test different DASH streams and license configurations instantly without recompiling the code.
 
