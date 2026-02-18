@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="form_padding">16dp</dimen>
+    <dimen name="form_element_margin_top">8dp</dimen>
+
+    <dimen name="download_status_margin_top">16dp</dimen>
+    <dimen name="download_status_padding">8dp</dimen>
+    <dimen name="download_progress_margin_top">12dp</dimen>
+
+    <dimen name="downloaded_videos_text_padding">16dp</dimen>
+    <dimen name="downloaded_item_padding_h">16dp</dimen>
+    <dimen name="downloaded_item_padding_v">4dp</dimen>
+
+    <dimen name="button_height">60dp</dimen>
+    <dimen name="button_margin_top">16dp</dimen>
+    <dimen name="button_margin_end">4dp</dimen>
+
+    <dimen name="small_text_size">12sp</dimen>
+    <dimen name="medium_text_size">16sp</dimen>
+    <dimen name="button_text_size">16sp</dimen>
+</resources>

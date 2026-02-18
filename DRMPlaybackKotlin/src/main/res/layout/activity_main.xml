@@ -1,30 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:argType="http://schemas.android.com/tools"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:focusable="true"
-    android:keepScreenOn="true">
+    android:orientation="vertical"
+    android:padding="@dimen/form_padding">
 
-    <com.google.android.exoplayer2.ui.StyledPlayerView
-        android:id="@+id/playerView"
+    <ImageButton
+        android:id="@+id/btn_cloud_drm_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/cloud_drm_logo" />
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:show_subtitle_button="true"
-        argType:fastforward_increment="15000"
-        argType:resize_mode="fixed_width"
-        argType:rewind_increment="15000"
-        argType:show_buffering="when_playing"
-        argType:show_fastforward_button="true"
-        argType:show_next_button="false"
-        argType:show_previous_button="false"
-        argType:show_rewind_button="true"
-        argType:show_subtitle_button="true"
-        argType:use_artwork="true"
-        argType:use_controller="true"
-        argType:use_sensor_rotation="true">
-    </com.google.android.exoplayer2.ui.StyledPlayerView>
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/form_element_margin_top"
+        android:hint="@string/hint_url"
+        app:boxStrokeColor="@color/blue">
 
-</FrameLayout>
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:inputType="text"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/form_element_margin_top"
+        android:hint="@string/hint_drm_license_url"
+        android:inputType="text"
+        app:boxStrokeColor="@color/blue">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_drm_license_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/form_element_margin_top"
+        android:hint="@string/hint_brand_guid"
+        app:boxStrokeColor="@color/blue">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_x_drm_brandGuid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:inputType="text"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/form_element_margin_top"
+        android:hint="@string/hint_user_token"
+        app:boxStrokeColor="@color/blue">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_x_drm_userToken"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:inputType="text"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:id="@+id/download_status_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/download_status_margin_top"
+        android:background="@drawable/status_background"
+        android:orientation="vertical"
+        android:padding="@dimen/download_status_padding"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_download_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/download_status_padding"
+            android:text="@string/waiting"
+            android:textSize="@dimen/small_text_size" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/download_progress_margin_top"
+            android:max="100" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_play"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:layout_marginTop="@dimen/button_margin_top"
+        android:text="@string/play"
+        android:textSize="@dimen/button_text_size" />
+
+    <Button
+        android:id="@+id/btn_download"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:text="@string/download"
+        android:textSize="@dimen/button_text_size" />
+
+    <Button
+        android:id="@+id/btn_go_to_downloads"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:text="@string/downloaded_videos"
+        android:textSize="@dimen/button_text_size" />
+
+</LinearLayout>
