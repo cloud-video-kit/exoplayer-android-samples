@@ -32,6 +32,7 @@ import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.I
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.X_DRM_BRAND_GUID
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.X_DRM_USER_TOKEN
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.DownloadUtil
+import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.ErrorUtils
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.ErrorUtils.findHttpException
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.extractMediaId
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.viewmodel.ExoPlayerViewModel
@@ -188,12 +189,10 @@ class PlayerActivity : AppCompatActivity() {
                     error.errorCode == PlaybackException.ERROR_CODE_DRM_LICENSE_ACQUISITION_FAILED -> {
                         val rootCause = findHttpException(error)
                         if (rootCause != null) {
-                            when (rootCause.responseCode) {
-                                403 -> getString(R.string.drm_error_403)
-                                401 -> getString(R.string.drm_error_401)
-                                404 -> getString(R.string.drm_error_404)
-                                else -> getString(R.string.drm_server_error, rootCause.responseCode)
-                            }
+                            ErrorUtils.getMessageForHttpCode(
+                                this@PlayerActivity,
+                                rootCause.responseCode
+                            )
                         } else {
                             getString(R.string.drm_error, error.localizedMessage)
                         }
