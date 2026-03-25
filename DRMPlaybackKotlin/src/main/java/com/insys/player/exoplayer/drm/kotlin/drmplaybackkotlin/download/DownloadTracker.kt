@@ -108,6 +108,7 @@ class DownloadTracker(
      * @param drmLicenseUrl The URL of the DRM license.
      * @param xDrmBrandGuid The custom header value for the DRM provider's tenant ID.
      * @param xDrmUserToken The user authentication token for the license request.
+     * @param onComplete Callback invoked when the download initiation finishes.
      */
     fun startDownload(
         mediaUrl: String,
@@ -117,7 +118,7 @@ class DownloadTracker(
         onComplete: (errorMessage: String?) -> Unit
     ) {
         viewModel.viewModelScope.launch {
-            try {
+            val resultMessage = try {
                 Log.d(tag, "Downloading DRM license...")
                 val keySetId =
                     downloadLicenseFor(mediaUrl, drmLicenseUrl, xDrmBrandGuid, xDrmUserToken)
@@ -136,33 +137,22 @@ class DownloadTracker(
                         downloadRequest,
                         false
                     )
-                    withContext(Dispatchers.Main) {
-                        onComplete(null)
-                    }
+                    null
                 } else {
-                    withContext(Dispatchers.Main) {
-                        onComplete(context.getString(R.string.cannot_find_drm_format))
-                    }
+                    context.getString(R.string.cannot_find_drm_format)
                 }
             } catch (e: HttpDataSource.InvalidResponseCodeException) {
-                withContext(Dispatchers.Main) {
-                   onComplete(getMessageForHttpCode(context, e.responseCode))
-                }
+                getMessageForHttpCode(context, e.responseCode)
             } catch (e: UnknownHostException) {
-                withContext(Dispatchers.Main) {
-                    onComplete(context.getString(R.string.invalid_url_or_no_internet_connection))
-                }
+                context.getString(R.string.invalid_url_or_no_internet_connection)
             } catch (e: Exception) {
-                val httpException = findHttpException(e)
-                if (httpException != null) {
-                    withContext(Dispatchers.Main) {
-                        onComplete(getMessageForHttpCode(context, httpException.responseCode))
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        onComplete(context.getString(R.string.unexpected_error, e.localizedMessage))
-                    }
-                }
+                findHttpException(e)?.let {
+                    getMessageForHttpCode(context, it.responseCode)
+                } ?: context.getString(R.string.unexpected_error, e.localizedMessage)
+            }
+
+            withContext(Dispatchers.Main) {
+                onComplete(resultMessage)
             }
         }
     }
