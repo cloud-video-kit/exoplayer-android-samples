@@ -18,6 +18,7 @@
     <string name="field_incorrect_length">Incorrect length, must be 36.</string>
     <string name="field_incorrect_url">Incorrect URL format, must start with http:// or https://.</string>
 
+    <string name="acquiring_drm_license">Acquiring DRM license…</string>
     <string name="downloading">Downloading…</string>
     <string name="waiting">Waiting…</string>
     <string name="removing">Removing video…</string>
@@ -31,4 +32,17 @@
 
     <string name="no_downloaded_videos">No downloaded videos.</string>
     <string name="downloaded_videos">Downloaded videos</string>
+
+    <string name="drm_error_403">DRM Error: Invalid User Token (403).</string>
+    <string name="drm_error_401">DRM Error: Invalid Tenant ID (401).</string>
+    <string name="drm_error_404">DRM Error: License Server not found (404).</string>
+    <string name="drm_server_error">DRM Server Error: %1$d</string>
+    <string name="drm_error">DRM Error: %1$s</string>
+    <string name="video_url_error">Video URL Error: %1$d</string>
+    <string name="playback_error">Playback error: %1$s</string>
+    <string name="format_error">Format Error: Server returned something else than DASH.</string>
+    <string name="cannot_find_drm_format">Cannot find DRM format. Check Media URL or manifest.</string>
+    <string name="server_error">Server returned error code: %1$d</string>
+    <string name="invalid_url_or_no_internet_connection">Invalid URL or no internet connection.</string>
+    <string name="unexpected_error">Unexpected error: %1$s</string>
 </resources>

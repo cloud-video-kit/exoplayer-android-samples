@@ -37,7 +37,7 @@ class VideoRepository(
         drmLicenseUrl: String,
         brandGuid: String,
         token: String,
-        onComplete: (Boolean) -> Unit
+        onComplete: (String?) -> Unit
     ) {
         downloadTracker.startDownload(mediaUrl, drmLicenseUrl, brandGuid, token, onComplete)
     }
