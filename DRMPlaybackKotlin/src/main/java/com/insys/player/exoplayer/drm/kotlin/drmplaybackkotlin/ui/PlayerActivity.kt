@@ -44,6 +44,8 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun releasePlayer() {
         exoPlayer?.let { player ->
+            player.stop()
+            player.clearMediaItems()
             player.release()
             exoPlayer = null
         }
@@ -65,10 +67,9 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-
     override fun onStop() {
         super.onStop()
-        exoPlayer?.pause()
+        releasePlayer()
     }
 
     override fun onPause() {
@@ -113,6 +114,7 @@ class PlayerActivity : AppCompatActivity() {
         drmLicenseUrl: String?,
         keySetId: ByteArray?
     ) {
+        if (exoPlayer != null) return
         val drmSessionManager: DefaultDrmSessionManager
         val drmHttpDataSourceFactory = DefaultHttpDataSource.Factory()
         val httpMediaDrmCallback = HttpMediaDrmCallback(drmLicenseUrl, drmHttpDataSourceFactory)
