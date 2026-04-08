@@ -23,8 +23,12 @@ import com.google.android.exoplayer2.offline.DownloadService
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import com.google.android.exoplayer2.upstream.HttpDataSource
+import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.R
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.HttpHeaders.BRAND_GUID
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.HttpHeaders.USER_TOKEN
+import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.ErrorUtils.findHttpException
+import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.ErrorUtils.getMessageForHttpCode
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.extractMediaId
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.viewmodel.ExoPlayerViewModel
 import kotlinx.coroutines.CompletableDeferred
@@ -32,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.net.UnknownHostException
 
 private const val GET_DRM_FORMAT_TIMEOUT = 20_000L
 
@@ -90,9 +95,6 @@ class DownloadTracker(
             val mediaId = mediaUrl.extractMediaId()
             Log.d(tag, "DRM license for $mediaId downloaded and saved.")
             keySetId
-        } catch (e: Exception) {
-            Log.e(tag, "Error while downloading DRM license.", e)
-            null
         } finally {
             offlineLicenseHelper.release()
         }
@@ -106,41 +108,51 @@ class DownloadTracker(
      * @param drmLicenseUrl The URL of the DRM license.
      * @param xDrmBrandGuid The custom header value for the DRM provider's tenant ID.
      * @param xDrmUserToken The user authentication token for the license request.
+     * @param onComplete Callback invoked when the download initiation finishes.
      */
     fun startDownload(
         mediaUrl: String,
         drmLicenseUrl: String,
         xDrmBrandGuid: String,
         xDrmUserToken: String,
-        onComplete: (success: Boolean) -> Unit
+        onComplete: (errorMessage: String?) -> Unit
     ) {
         viewModel.viewModelScope.launch {
-            Log.d(tag, "Downloading DRM license...")
-            val keySetId =
-                downloadLicenseFor(mediaUrl, drmLicenseUrl, xDrmBrandGuid, xDrmUserToken)
+            val resultMessage = try {
+                Log.d(tag, "Downloading DRM license...")
+                val keySetId =
+                    downloadLicenseFor(mediaUrl, drmLicenseUrl, xDrmBrandGuid, xDrmUserToken)
 
-            if (keySetId != null) {
-                val mediaId = mediaUrl.extractMediaId()
-                Log.d(tag, "License downloaded, started video download for: $mediaId")
+                if (keySetId != null) {
+                    val mediaId = mediaUrl.extractMediaId()
+                    Log.d(tag, "License downloaded, started video download for: $mediaId")
 
-                val downloadRequest = DownloadRequest.Builder(mediaId, mediaUrl.toUri())
-                    .setKeySetId(keySetId)
-                    .build()
+                    val downloadRequest = DownloadRequest.Builder(mediaId, mediaUrl.toUri())
+                        .setKeySetId(keySetId)
+                        .build()
 
-                DownloadService.sendAddDownload(
-                    context,
-                    ExoPlayerDownloadService::class.java,
-                    downloadRequest,
-                    false
-                )
-                withContext(Dispatchers.Main) {
-                    onComplete(true)
+                    DownloadService.sendAddDownload(
+                        context,
+                        ExoPlayerDownloadService::class.java,
+                        downloadRequest,
+                        false
+                    )
+                    null
+                } else {
+                    context.getString(R.string.cannot_find_drm_format)
                 }
-            } else {
-                Log.d(tag, "Download video cancelled, because license could not be downloaded.")
-                withContext(Dispatchers.Main) {
-                    onComplete(false)
-                }
+            } catch (e: HttpDataSource.InvalidResponseCodeException) {
+                getMessageForHttpCode(context, e.responseCode)
+            } catch (e: UnknownHostException) {
+                context.getString(R.string.invalid_url_or_no_internet_connection)
+            } catch (e: Exception) {
+                findHttpException(e)?.let {
+                    getMessageForHttpCode(context, it.responseCode)
+                } ?: context.getString(R.string.unexpected_error, e.localizedMessage)
+            }
+
+            withContext(Dispatchers.Main) {
+                onComplete(resultMessage)
             }
         }
     }

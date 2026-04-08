@@ -129,16 +129,24 @@ class MainActivity : AppCompatActivity() {
                 val downloadState = currentDownload?.state
                 when (downloadState) {
                     null, Download.STATE_FAILED, Download.STATE_COMPLETED -> {
+                        downloadStatusContainer.visibility = View.VISIBLE
+                        progressBar.visibility = View.VISIBLE
+                        progressBar.isIndeterminate = true
+                        statusTextView.text = getString(R.string.acquiring_drm_license)
+                        setInputsEnabled(false)
+                        binding.btnDownload.isEnabled = false
+
                         viewModel.startDownloadForMedia(
                             mediaUrl,
                             binding.etDrmLicenseUrl.text.toString(),
                             binding.etXDrmBrandGuid.text.toString(),
                             binding.etXDrmUserToken.text.toString(),
-                            onComplete = { success ->
-                                if (success) {
-                                    toast("License has been downloaded. Starting video download...")
+                            onComplete = { errorMessage ->
+                                if (errorMessage == null) {
+                                    this@MainActivity.toast("License has been downloaded. Starting video download...")
                                 } else {
-                                    toast("Error while downloading license.")
+                                    this@MainActivity.toast(errorMessage)
+                                    updateUI(null)
                                 }
                             }
                         )

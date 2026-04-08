@@ -42,7 +42,7 @@ class ExoPlayerViewModel(application: Application) : AndroidViewModel(applicatio
         drmLicenseUrl: String,
         xDrmBrandGuid: String,
         xDrmUserToken: String,
-        onComplete: (success: Boolean) -> Unit
+        onComplete: (errorMessage: String?) -> Unit
     ) {
         repository.startDownload(mediaUrl, drmLicenseUrl, xDrmBrandGuid, xDrmUserToken, onComplete)
     }
