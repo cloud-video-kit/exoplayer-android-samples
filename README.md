@@ -35,6 +35,28 @@ More information about the structure of the token and how to generate it can be 
 
 The application includes a specialized workflow for testing downloadable content-protected MPEG-DASH. This section uses the **DOWNLOAD** and **DOWNLOADED VIDEOS** buttons located below the form.
 
+### User token (JWT) for offline downloads
+
+For **streaming only**, a compact JWT (for example with `exp` and `kid` only) may be enough. For **DOWNLOAD** / offline license acquisition, the license server must issue a **persistent** Widevine license that ExoPlayer can store as **keySetId**. In practice, the JWT claims often need more than `exp` and `kid`:
+
+* **`widevine.persistent`** – set to **`true`**. Without this, offline license acquisition during download can fail even when online playback works.
+* **`duration`** – license lifetime in seconds (for example `86400` for one day)..
+* **`exp`** – JWT expiry (Unix timestamp in the future).
+* **`kid`** – key identifiers, commonly `["*"]` for all keys.
+
+Example payload shape (sign and build the token as described in [Cloud DRM token documentation](https://docs.videokit.cloud/developers/cloud-drm/license-acquisition/token)):
+
+```json
+{
+  "exp": 1735689600,
+  "kid": ["*"],
+  "duration": 86400,
+  "widevine": {
+    "persistent": true
+  }
+}
+```
+
 ### 1. Downloading Content
 
 When you press **DOWNLOAD**, the app performs the same field validation and internet check as the playback mode.
