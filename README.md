@@ -97,6 +97,7 @@ This section describes the Android implementation of the DRM prefetch mechanism.
 
 ### 1. The "Prefetch and Play" Logic
 Standard playback starts license acquisition only after the player is ready. Prefetch mechanism works differently:
+
 * **Background Acquisition:** As soon as user clicks the **PREFETCH AND PLAY** button, it launches a background task to fetch the DRM license immediately.
 * **Manifest Parsing:** It uses `DashUtil` to parse the `.mpd` manifest in the background to find the `DrmInitData`.
 * **Instant Playout:** While the license is being fetched in the background, the player is initialized but kept in a paused state (`playWhenReady = false`).
@@ -104,6 +105,7 @@ Standard playback starts license acquisition only after the player is ready. Pre
 
 ### 2. How to Test
 To verify the prefetch mechanism:
+
 1. **Tools:** Open **Android Studio Network Inspector** or **Logcat** (filter by tag: `PlayerActivity`).
 2. **Action:** Launch the player using the **PREFETCH AND PLAY** button.
 3. **Prefetch Phase (Logcat):** Look for the following sequence of logs occurring immediately upon activity start:
