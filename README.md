@@ -114,9 +114,8 @@ To verify the prefetch mechanism:
     - `Manifest parsed. Found DRM init data. Requesting license...`
     - `DRM License prefetch completed successfully.`
 4. **Network Phase (Inspector):** Confirm that the manifest (`.mpd`) and the license server request (`drmLicenseUrl`) are completed **before** you interact with the player.
-5. **Playback Phase:** Press **PLAY** and confirm that:
-    - The video starts without a new request to the license server.
-    - 
+5. **Playback Phase:** Press **PLAY** and confirm that the video starts without a new request to the license server.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
