@@ -3,6 +3,7 @@ package com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.ui
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.C
@@ -14,10 +15,13 @@ import com.google.android.exoplayer2.Player.STATE_BUFFERING
 import com.google.android.exoplayer2.Player.STATE_ENDED
 import com.google.android.exoplayer2.Player.STATE_READY
 import com.google.android.exoplayer2.drm.DefaultDrmSessionManager
+import com.google.android.exoplayer2.drm.DrmSessionEventListener
 import com.google.android.exoplayer2.drm.FrameworkMediaDrm
 import com.google.android.exoplayer2.drm.HttpMediaDrmCallback
+import com.google.android.exoplayer2.drm.OfflineLicenseHelper
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.source.UnrecognizedInputFormatException
+import com.google.android.exoplayer2.source.dash.DashUtil
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
@@ -28,6 +32,7 @@ import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.H
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.HttpHeaders.USER_TOKEN
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.DRM_LICENSE_URL
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.IS_OFFLINE
+import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.PREFETCH_MODE
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.URL
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.X_DRM_BRAND_GUID
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.X_DRM_USER_TOKEN
@@ -36,13 +41,16 @@ import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.ErrorUtils
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.ErrorUtils.findHttpException
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.extractMediaId
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.viewmodel.ExoPlayerViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PlayerActivity : AppCompatActivity() {
     private val tag = "PlayerActivity"
     private lateinit var binding: ActivityPlayerBinding
     private lateinit var viewModel: ExoPlayerViewModel
     private var exoPlayer: ExoPlayer? = null
+    private var isInitializing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,7 +101,11 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun initializePlayer() {
+        if (isInitializing || exoPlayer != null) return
+        isInitializing = true
+
         val isOffline = intent.getBooleanExtra(IS_OFFLINE, false)
+        val shouldPrefetch = intent.getBooleanExtra(PREFETCH_MODE, false)
         val mediaUrl = intent.getStringExtra(URL)
         val drmLicenseUrl = intent.getStringExtra(DRM_LICENSE_URL)
 
@@ -104,17 +116,96 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            val mediaId = mediaUrl.extractMediaId()
-            val videoFromDb = viewModel.getDownloadedVideoById(mediaId)
-            val keySetId = videoFromDb?.keySetId
+            try {
+                if (shouldPrefetch && !isOffline) {
+                    launch(Dispatchers.IO) {
+                        prefetchDrmLicense(mediaUrl, drmLicenseUrl)
+                    }
+                }
 
-            if (isOffline && keySetId == null) {
-                toast("Error: No license.")
-                finish()
-                return@launch
+                val mediaId = mediaUrl.extractMediaId()
+                val videoFromDb = viewModel.getDownloadedVideoById(mediaId)
+                val keySetId = videoFromDb?.keySetId
+
+                if (isOffline && keySetId == null) {
+                    toast("Error: No license.")
+                    finish()
+                    return@launch
+                }
+
+                setupPlayer(isOffline, mediaUrl, drmLicenseUrl, keySetId, shouldPrefetch)
+            } catch (e: Exception) {
+                toast("Initialization error.")
+                Log.e(tag, "Initialization error: ${e.message}")
+            } finally {
+                isInitializing = false
             }
+        }
+    }
 
-            setupPlayer(isOffline, mediaUrl, drmLicenseUrl, keySetId)
+    private suspend fun prefetchDrmLicense(mediaUrl: String, drmLicenseUrl: String) {
+        withContext(Dispatchers.IO) {
+            var offlineLicenseHelper: OfflineLicenseHelper? = null
+            try {
+                Log.d(tag, "Starting DRM prefetch (parsing manifest)...")
+                val dataSourceFactory = DefaultHttpDataSource.Factory()
+                    .setAllowCrossProtocolRedirects(true)
+                val xDrmBrandGuid = intent.getStringExtra(X_DRM_BRAND_GUID)
+                val xDrmUserToken = intent.getStringExtra(X_DRM_USER_TOKEN)
+
+                if (xDrmBrandGuid != null && xDrmUserToken != null) {
+                    val headers = mapOf(
+                        BRAND_GUID to xDrmBrandGuid,
+                        USER_TOKEN to xDrmUserToken
+                    )
+                    dataSourceFactory.setDefaultRequestProperties(headers)
+                    Log.d(tag, "Headers set for prefetch: BRAND_GUID and USER_TOKEN")
+                }
+
+                val dataSource = dataSourceFactory.createDataSource()
+
+                // Load and parse the DASH manifest to extract DRM initialization data
+                val dashManifest = DashUtil.loadManifest(dataSource, mediaUrl.toUri())
+
+                // Locate the first video adaptation set to find encryption details
+                val period = dashManifest.getPeriod(0)
+                val adaptationSetIndex =
+                    period.adaptationSets.indexOfFirst { it.type == C.TRACK_TYPE_VIDEO }
+
+                if (adaptationSetIndex == -1) {
+                    Log.e(tag, "No video adaptation set found in manifest.")
+                    return@withContext
+                }
+
+                val adaptationSet = period.adaptationSets[adaptationSetIndex]
+                val representation = adaptationSet.representations[0]
+
+                // Load sample format which contains the necessary DrmInitData
+                val format =
+                    DashUtil.loadSampleFormat(dataSource, C.TRACK_TYPE_VIDEO, representation)
+
+                if (format?.drmInitData == null) {
+                    Log.e(tag, "Prefetch failed: No DRM data in format.")
+                    return@withContext
+                }
+
+                Log.d(tag, "Manifest parsed. Found DRM init data. Requesting license...")
+
+                offlineLicenseHelper = OfflineLicenseHelper.newWidevineInstance(
+                    drmLicenseUrl,
+                    dataSourceFactory,
+                    DrmSessionEventListener.EventDispatcher()
+                )
+                // Perform the actual license download and storage
+                offlineLicenseHelper.downloadLicense(format)
+
+                Log.d(tag, "DRM License prefetch completed successfully.")
+            } catch (e: Exception) {
+                Log.e(tag, "DRM Prefetch failed: ${e.message}")
+                e.printStackTrace()
+            } finally {
+                offlineLicenseHelper?.release()
+            }
         }
     }
 
@@ -122,7 +213,8 @@ class PlayerActivity : AppCompatActivity() {
         isOffline: Boolean,
         mediaUrl: String,
         drmLicenseUrl: String?,
-        keySetId: ByteArray?
+        keySetId: ByteArray?,
+        shouldPrefetch: Boolean = false
     ) {
         if (exoPlayer != null) return
         val drmSessionManager: DefaultDrmSessionManager
@@ -232,7 +324,7 @@ class PlayerActivity : AppCompatActivity() {
         val mediaItem = MediaItem.fromUri(mediaUrl)
 
         exoPlayer?.setMediaItem(mediaItem)
-        exoPlayer?.playWhenReady = true
+        exoPlayer?.playWhenReady = !shouldPrefetch
         exoPlayer?.prepare()
     }
 }

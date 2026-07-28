@@ -21,6 +21,7 @@ import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.ui.downloads.Down
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.CLOUD_DRM_URL
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.DRM_LICENSE_URL
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.IS_OFFLINE
+import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.PREFETCH_MODE
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.URL
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.X_DRM_BRAND_GUID
 import com.insys.player.exoplayer.drm.kotlin.drmplaybackkotlin.utils.Constants.IntentExtra.X_DRM_USER_TOKEN
@@ -84,6 +85,17 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnGoToDownloads.setOnClickListener {
             startActivity(Intent(this, DownloadsActivity::class.java))
+        }
+
+        binding.btnPrefetchAndPlay.setOnClickListener {
+            val intent = Intent(this, PlayerActivity::class.java).apply {
+                putExtra(PREFETCH_MODE, true)
+                putExtra(URL, binding.etUrl.text.toString())
+                putExtra(DRM_LICENSE_URL, binding.etDrmLicenseUrl.text.toString())
+                putExtra(X_DRM_USER_TOKEN, binding.etXDrmUserToken.text.toString())
+                putExtra(X_DRM_BRAND_GUID, binding.etXDrmBrandGuid.text.toString())
+            }
+            startActivity(intent)
         }
 
         downloadButton.setOnClickListener {
