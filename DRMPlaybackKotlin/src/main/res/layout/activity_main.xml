@@ -117,6 +117,13 @@
         android:textSize="@dimen/button_text_size" />
 
     <Button
+        android:id="@+id/btn_prefetch_and_play"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:text="@string/prefetch_and_play"
+        android:textSize="@dimen/button_text_size" />
+
+    <Button
         android:id="@+id/btn_download"
         android:layout_width="match_parent"
         android:layout_height="@dimen/button_height"
