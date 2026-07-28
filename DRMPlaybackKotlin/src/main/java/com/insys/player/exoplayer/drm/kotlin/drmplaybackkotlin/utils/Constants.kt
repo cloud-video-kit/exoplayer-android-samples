@@ -9,6 +9,7 @@ object Constants {
         const val X_DRM_BRAND_GUID = "X_DRM_BRAND_GUID"
         const val X_DRM_USER_TOKEN = "X_DRM_USER_TOKEN"
         const val IS_OFFLINE = "IS_OFFLINE"
+        const val PREFETCH_MODE = "PREFETCH_MODE"
     }
 
     object HttpHeaders {
